@@ -3,4 +3,6 @@ tiny-world
 
 Monadic effect worlds for interacting safely with mutable data.
 
-There will be something here soon.
+This is trivial but useful. 
+
+More here soon. For now see the examples in `src/test`.
