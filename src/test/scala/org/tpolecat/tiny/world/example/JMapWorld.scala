@@ -41,7 +41,10 @@ object JMapWorldTest extends App {
   import MyWorld._
 
   // Here is some code that updates and queries a map using world actions. This
-  // code is entirely pure; it's a value in fact.
+  // code is pure. MyWorld.Action[A] is a bit like State[java.util.Map[String, 
+  // String], A] but the state is entirely hidden; it is impossible for client
+  // code to access the underlying map. In a private world even the *type* of
+  // the state is hidden.
   val action = for {
     f <- get("foo")
     _ <- clear()
