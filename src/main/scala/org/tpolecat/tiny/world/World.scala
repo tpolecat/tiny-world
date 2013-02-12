@@ -52,6 +52,14 @@ trait PrivateWorld extends World {
   }
 }
 
+trait ImpurePrivateWorld extends World {
+  protected def initialState:State
+  implicit class RunnableAction[A](a:Action[A]) {
+    def unsafeRun:A = runWorld(a, initialState)._2
+  }
+}
+
+
 trait PublicWorld extends World {
   type State // public now
   implicit class RunnableAction[A](a:Action[A]) {
