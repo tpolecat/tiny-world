@@ -32,7 +32,7 @@ object JMapWorldTest extends App {
   // life this is the object that gets handed to us.
   val m = new java.util.HashMap[String, String]
   m.put("foo", "bar")
-  println("Initial map state is: " + m)
+  println("Initial map state is: " + m) // {foo=bar}
 
   // Create an effect world that knows about maps. JMapWorld does this out of
   // the box, but we need to provide type arguments. The world is simply a
@@ -53,7 +53,7 @@ object JMapWorldTest extends App {
   val result = action.run(m) // CAREFUL HERE
 
   // What have we done?
-  println("Result was: " + result)
-  println("New map state is: " + m)
+  println("Result was: " + result)  // foo was Some(bar)
+  println("New map state is: " + m) // {bar=quxabc}
   
 }
