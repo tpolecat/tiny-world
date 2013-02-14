@@ -19,6 +19,7 @@ object BoxWorld extends PublicWorld {
   // Primitive operations
   def get: Action[Int] = effect(b => b.n)
   def mod(f: Int => Int): Action[Int] = effect(b => b mod f) >> get
+  def nop:Action[Unit] = unit()
 
 }
 
@@ -39,6 +40,15 @@ object BoxWorldTest extends App {
 
   println(foo(3).eval(new Box(2))) // (Box(15),(2,5,15))
   println(bar(3).eval(new Box(2))) // (Box(15),(2,5,15))
+
+  // Recursive action will never blow the stack
+  val countDown:Action[String] = for {
+    a <- get
+    _ <- if (a == 0) nop else mod(_ - 1) >> countDown
+  } yield "done"
+  
+  println(countDown.eval(new Box(10000))) // (Box(0),done)
+
 
 }
 

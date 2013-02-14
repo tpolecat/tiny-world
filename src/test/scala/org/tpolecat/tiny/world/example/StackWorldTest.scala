@@ -8,6 +8,7 @@ object StackWorldTest extends App {
     type State = collection.mutable.Map[K, V]
     def get(k: K): Action[Option[V]] = effect(_.get(k))
     def put(k: K, v: V): Action[Unit] = effect(_.put(k, v))
+    def nop:Action[Unit] = unit()
   }
 
   object StringIntMapWorld extends MapWorld[String, Int]
@@ -20,7 +21,7 @@ object StackWorldTest extends App {
   } yield a
 
   println(action.eval(collection.mutable.Map("foo" -> 33)))
-  
+    
 }
 
 
