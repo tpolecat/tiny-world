@@ -36,7 +36,7 @@ object AffineTransferWorldTest extends App {
   // Running the action is impure, but we can isolate the impurity and call
   // it out clearly. We can be confident that the action, no matter what it
   // does, will not manipulate the state in any way disallowed by our 
-  // primitives, nor will it retain or share the state with anyone else.
+  // primitives, and will not retain or share the state with anyone else.
   val (state, result) = action.eval(new AffineTransform) // CAREFUL HERE
 
   // What have we done?
