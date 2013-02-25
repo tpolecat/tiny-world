@@ -15,3 +15,4 @@ project/plugins/project/
 .classpath
 .project
 bin/
+.settings/
