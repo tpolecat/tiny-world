@@ -8,8 +8,9 @@ import java.text.NumberFormat
 import java.util.Currency
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import org.tpolecat.tiny.world.ImpureState
 
-object DecimalFormatWorld extends FactoryWorld {
+object DecimalFormatWorld extends FactoryWorld with ImpureState {
   protected type State = DecimalFormat
   protected def initialState = new DecimalFormat()
   type Result = Double => String

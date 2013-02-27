@@ -11,12 +11,15 @@ trait StackWorld {
   type State
 
   final case class Action[A] private[StackWorld] (eval: State => (State, A)) {
-    def map[B](f: A => B): Action[B] = flatMap(s => unit(f(s)))
+
     def flatMap[B](f: A => Action[B]): Action[B] =
-      new Action[B](s => {
+      Action { s =>
         val (s0, a) = eval(s)
         f(a).eval(s0)
-      })
+      }
+
+    def map[B](f: A => B): Action[B] = flatMap(s => unit(f(s)))
+
   }
 
   implicit object MonadAction extends Monad[Action] {
@@ -24,9 +27,8 @@ trait StackWorld {
     def point[A](a: => A): Action[A] = unit(a)
   }
 
-  protected def action[A](f: State => (State, A)) = new Action(f)
-  protected def effect[A](f: State => A): Action[A] = action(s => (s, f(s)))
-  protected def unit[A](a: => A): Action[A] = action((_, a))
+  protected def effect[A](f: State => A): Action[A] = Action(s => (s, f(s)))
+  protected def unit[A](a: => A): Action[A] = Action((_, a))
 
 }
 
