@@ -13,50 +13,79 @@ The `State` monad enables pure stateful computations by threading a hunk of stat
 Here is a quick example.
 
 ```scala
-package org.tpolecat.tiny.world.example
+/**
+ * A `World` with a complete set of primitives for random number generation. This `World` wraps a `scala.util.Random`
+ * but that fact is entirely hidden from users, who have no way to even know what the `State` type is (much less get a
+ * reference to it). Users of `RngWorld` can manipulate this state through monadic `Action`s (which are pure) and can
+ * execute these actions in a pure or impure context.
+ */
+object RngWorld extends World {
 
-import org.tpolecat.tiny.world.PublicWorld
-import java.awt.geom.AffineTransform
+  // Our world's state is an instance of `Random`
+  protected type State = Random
 
-// An effect world that understands AWT affine transform objects
-object AffineTransferWorld extends PublicWorld {
+  // An `Action[A]` is a pure value that (when interpreted) performs a potentially effectful computation on our `State` 
+  // and returns a value of type `A`. The `Action` type is path-dependent and unique to this `World`.
+  def nextBoolean: Action[Boolean] = effect(_.nextBoolean)
 
-  type State = AffineTransform
+  // Other trivial actions (return types omitted)
+  def nextDouble = effect(_.nextDouble)
+  def nextFloat = effect(_.nextFloat)
+  def nextGaussian = effect(_.nextGaussian)
+  def nextInt = effect(_.nextInt)
+  def nextInt(n: Int) = effect(_.nextInt(n))
+  def nextLong = effect(_.nextLong)
+  def nextPrintableChar = effect(_.nextPrintableChar)
+  def nextPrintableString(len: Int) = effect(_.alphanumeric.take(len).mkString)
+  def nextString(len: Int) = effect(_.nextString(len))
+  def setSeed(seed: Long) = effect(_.setSeed(seed))
 
-  // Some actions (a real implementation would have many more)
-  def determinant: Action[Double] = effect(_.getDeterminant)
-  def invert: Action[Unit] = effect(_.invert())
-  def rotate(theta: Double): Action[Unit] = effect(_.rotate(theta))
-  def scale(sx: Double, sy: Double): Action[Unit] = effect(_.scale(sx, sy))
+  // A derived Action for choice. `Action` is monadic, so we can use `map` for great good. 
+  def choose[A](as: A*): Action[A] = nextInt(as.length).map(as)
+
+  // Shuffle is trivial but has a horrid type signature (taken verbatim from the `shuffle` method we're delegating to).
+  def shuffle[T, F[X] <: TraversableOnce[X]](xs: F[T])(implicit bf: CanBuildFrom[F[T], T, F[T]]): Action[F[T]] =
+    effect(_.shuffle(xs))
+
+  // For bytes we want to return an immutable structure, so we have a temporary `Array[Byte]` that we immediately turn
+  // into a `List[Byte]`.
+  def nextBytes(len: Int): Action[List[Byte]] = effect { r =>
+    val bs = new Array[Byte](len)
+    r.nextBytes(bs)
+    bs.toList
+  }
+
+  // In order to make our `Action`s runnable, we must provide a public way to invoke `runWorld`. Because the choice of
+  // initial `State` and return value are specific to each `World`, this is left to the user. Here we provide two ways
+  // of running an `Action`. The first consumes a seed value and is referentially transparent. The second returns an IO
+  // action that uses the system clock for the random seed.
+  implicit class RunnableAction[A](a: Action[A]) {
+    def run(seed: Long): A = runWorld(a, new Random(seed))._2
+    def liftIO: IO[A] = IO(System.currentTimeMillis).map(run)
+  }
 
 }
 
-// Client code uses the world thus:
-object AffineTransferWorldTest extends App {
+object RngWorldTest extends App {
 
-  // The world is just a module that exposes actions for our use
-  import AffineTransferWorld._
+  // Import the `Action` constructors from `RngWorld`
+  import RngWorld._
 
-  // A pure action that produces a String. The action might manipulate an
-  // underlying AffineTransform when it is "run" at a later time. The action
-  // has no access to the state itself, so references cannot leak.
-  val action: Action[String] = for {
-    _ <- scale(2.0, -1.0)
-    a <- determinant
-    _ <- rotate(math.Pi / 2)
-    _ <- invert
-    b <- determinant
-  } yield "Determinant was %2.0f, then %2.0f".format(a, b)
+  // A simple data type
+  case class Person(title: String, name: String, age: Int)
 
-  // Running the action is impure, but we can isolate the impurity and call
-  // it out clearly. We can be confident that the action, no matter what it
-  // does, will not manipulate the state in any way disallowed by our 
-  // primitives, nor will it retain or share the state with anyone else.
-  val (state, result) = action.eval(new AffineTransform) // CAREFUL HERE
+  // An action to generate a random Person.
+  val randomPerson = for {
+    t <- choose("Mr", "Mrs", "Dr")
+    x <- nextInt(5)
+    n <- nextPrintableString(x + 5)
+    a <- nextInt(100)
+  } yield Person(t, n, a)
 
-  // What have we done?
-  println(result) // "Determinant was -2, then -1"
-  println(state) // AffineTransform[[0.0, -1.0, 0.0], [-0.5, -0.0, 0.0]]
+  // Run that baby
+  println(randomPerson.run(3)) // This is pure
+  println(randomPerson.run(3)) // This is also pure, so the result will be the same
+  println(randomPerson.liftIO.unsafePerformIO) // DANGER, this is impure!
 
 }
 ```

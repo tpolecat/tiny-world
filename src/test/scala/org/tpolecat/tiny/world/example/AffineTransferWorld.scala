@@ -14,6 +14,8 @@ object AffineTransferWorld extends PublicWorld {
   def rotate(theta: Double): Action[Unit] = effect(_.rotate(theta))
   def scale(sx: Double, sy: Double): Action[Unit] = effect(_.scale(sx, sy))
 
+  // TODO: add transform method: Seq[(Double,Double)] => Seq[(Double,Double)]
+  
 }
 
 // Client code uses the world thus:

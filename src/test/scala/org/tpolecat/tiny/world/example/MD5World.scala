@@ -34,6 +34,9 @@ object MD5WorldTest extends App {
     d <- digest
   } yield "%d bytes: %s".format(n, d.mkString(" "))
 
+  def quickMD5(s:String) = (updateUTF8(s) >> digest).run
+  
   println(md5(List("foo", "bar", "baz")).run)
+  println(quickMD5(List("foo", "bar", "baz").mkString))
   
 }

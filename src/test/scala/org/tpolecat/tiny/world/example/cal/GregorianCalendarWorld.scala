@@ -60,7 +60,6 @@ object CalTest extends App {
     _ <- month := Month.Dec
     _ <- dayOfMonth := 25
     c <- dayOfYear
-    h <- hour // yay!
   } yield c - d
 
   val now = ((year : Action[Int]) |@| month |@| dayOfMonth).tupled

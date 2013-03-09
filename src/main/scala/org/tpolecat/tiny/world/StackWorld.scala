@@ -27,6 +27,7 @@ trait StackWorld {
     def point[A](a: => A): Action[A] = unit(a)
   }
 
+  protected def action[A](f: State => (State,A)): Action[A] = Action(f)
   protected def effect[A](f: State => A): Action[A] = Action(s => (s, f(s)))
   protected def unit[A](a: => A): Action[A] = Action((_, a))
 
