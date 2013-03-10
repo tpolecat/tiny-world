@@ -28,7 +28,7 @@ object Weekday {
     override def predn(n: Int, a: Weekday) = super.predn(n % 7, a)
     override def min = Some(Sun)
     override def max = Some(Sat)
-  }
-
+  }  
+  
 }
 

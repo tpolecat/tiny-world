@@ -10,82 +10,49 @@ What is this?
 
 The `State` monad enables pure stateful computations by threading a hunk of state that is available to client code. `tiny-world` provides a similar mechanism, with the twist that the state is available only to a set of primitive actions that are defined by the implementor of a `World`. Client code can use these primitives but has no access to the underlying state, which makes the mechanism safe for use with otherwise unsafe things like mutable values. It's almost exactly the same as `IO`, but the "real world" parameter is instead any value of your choosing, and the primitives can manipulate that value.
 
-Here is a quick example.
+Here is a minimal example.
 
 ```scala
 /**
- * A `World` with a complete set of primitives for random number generation. This `World` wraps a `scala.util.Random`
- * but that fact is entirely hidden from users, who have no way to even know what the `State` type is (much less get a
- * reference to it). Users of `RngWorld` can manipulate this state through monadic `Action`s (which are pure) and can
- * execute these actions in a pure or impure context.
+ * An example `World` with a small set of `Action`s for random number generation. Although interpreting `Action`s in
+ * this `World` involves manipulation of an impure `State`, this impurity is not visible to users; the API is pure.
  */
-object RngWorld extends World {
+object RngWorldMinimal extends World {
 
-  // Our world's state is an instance of `Random`
+  // Our world's state is an instance of `Random`, but clients have no way to know this, and have no way to get a 
+  // reference to the `State` as it is passed through each `Action`.
   protected type State = Random
 
   // An `Action[A]` is a pure value that (when interpreted) performs a potentially effectful computation on our `State` 
-  // and returns a value of type `A`. The `Action` type is path-dependent and unique to this `World`.
-  def nextBoolean: Action[Boolean] = effect(_.nextBoolean)
-
-  // Other trivial actions (return types omitted)
-  def nextDouble = effect(_.nextDouble)
-  def nextFloat = effect(_.nextFloat)
-  def nextGaussian = effect(_.nextGaussian)
+  // and returns a value of type `A`. The `Action` type is path-dependent and unique to this `World`. These `Actions`s
+  // are values and their constructors are pure.
   def nextInt = effect(_.nextInt)
   def nextInt(n: Int) = effect(_.nextInt(n))
-  def nextLong = effect(_.nextLong)
-  def nextPrintableChar = effect(_.nextPrintableChar)
-  def nextPrintableString(len: Int) = effect(_.alphanumeric.take(len).mkString)
-  def nextString(len: Int) = effect(_.nextString(len))
-  def setSeed(seed: Long) = effect(_.setSeed(seed))
-
-  // A derived Action for choice. `Action` is monadic, so we can use `map` for great good. 
-  def choose[A](as: A*): Action[A] = nextInt(as.length).map(as)
-
-  // Shuffle is trivial but has a horrid type signature (taken verbatim from the `shuffle` method we're delegating to).
-  def shuffle[T, F[X] <: TraversableOnce[X]](xs: F[T])(implicit bf: CanBuildFrom[F[T], T, F[T]]): Action[F[T]] =
-    effect(_.shuffle(xs))
-
-  // For bytes we want to return an immutable structure, so we have a temporary `Array[Byte]` that we immediately turn
-  // into a `List[Byte]`.
-  def nextBytes(len: Int): Action[List[Byte]] = effect { r =>
-    val bs = new Array[Byte](len)
-    r.nextBytes(bs)
-    bs.toList
-  }
 
   // In order to make our `Action`s runnable, we must provide a public way to invoke `runWorld`. Because the choice of
-  // initial `State` and return value are specific to each `World`, this is left to the user. Here we provide two ways
-  // of running an `Action`. The first consumes a seed value and is referentially transparent. The second returns an IO
-  // action that uses the system clock for the random seed.
+  // initial `State` and return value are specific to each `World`, this is left to the implementor. Here we provide a 
+  // single way to run an `Action` based on a provided seed, which is a pure function.
   implicit class RunnableAction[A](a: Action[A]) {
-    def run(seed: Long): A = runWorld(a, new Random(seed))._2
-    def liftIO: IO[A] = IO(System.currentTimeMillis).map(run)
+    def run(seed: Long): A = runWorld(a, new Random(seed))._2    
   }
 
 }
 
-object RngWorldTest extends App {
+object RngWorldMinimalTest extends App {
 
-  // Import the `Action` constructors from `RngWorld`
-  import RngWorld._
+  // Import our `Action`s 
+  import RngWorldMinimal._
 
-  // A simple data type
-  case class Person(title: String, name: String, age: Int)
-
-  // An action to generate a random Person.
-  val randomPerson = for {
-    t <- choose("Mr", "Mrs", "Dr")
-    x <- nextInt(5)
-    n <- nextPrintableString(x + 5)
+  // An `Action` that returns a pair of integers, a < 100, b < a
+  val pair = for {
     a <- nextInt(100)
-  } yield Person(t, n, a)
-
+    b <- nextInt(a)
+  } yield (a, b)
+  
   // Run that baby
-  println(randomPerson.run(3)) // This is pure
-  println(randomPerson.run(3)) // This is also pure, so the result will be the same
-  println(randomPerson.liftIO.unsafePerformIO) // DANGER, this is impure!
+  println(pair.run(0L)) // pure! always returns (60, 28)
+  println(pair.run(0L)) // exactly the same of course
+  println(pair.run(123L)) // (82, 52)
 
 }
 ```

@@ -3,8 +3,7 @@ package org.tpolecat.tiny.world
 import scalaz.Monad
 
 /**
- * A simpler kind of world that doesn't use the free monad, which means it can
- * blow the stack.
+ * A simpler kind of world that doesn't use the free monad, which means it can blow the stack.
  */
 trait StackWorld {
 
@@ -30,6 +29,6 @@ trait StackWorld {
   protected def action[A](f: State => (State,A)): Action[A] = Action(f)
   protected def effect[A](f: State => A): Action[A] = Action(s => (s, f(s)))
   protected def unit[A](a: => A): Action[A] = Action((_, a))
-
+  
 }
 

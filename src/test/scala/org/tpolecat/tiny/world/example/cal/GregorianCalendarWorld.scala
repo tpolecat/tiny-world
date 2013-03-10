@@ -4,8 +4,6 @@ import java.util.Calendar._
 import org.tpolecat.tiny.world._
 import scalaz.syntax.monad._
 import scalaz._
-//import scalaz._
-//import Scalaz._
 import java.util.TimeZone
 import java.util.Locale
 import java.util.GregorianCalendar

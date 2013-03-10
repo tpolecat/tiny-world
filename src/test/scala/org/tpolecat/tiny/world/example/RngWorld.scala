@@ -1,12 +1,11 @@
 package org.tpolecat.tiny.world.example
 
 import language.higherKinds
-
 import scala.collection.generic.CanBuildFrom
 import scala.util.Random
 import scalaz.effect.IO
 
-import org.tpolecat.tiny.world.World
+import org.tpolecat.tiny.world._
 
 /**
  * A `World` with a complete set of primitives for random number generation. This `World` wraps a `scala.util.Random`
@@ -72,8 +71,8 @@ object RngWorldTest extends App {
   // An action to generate a random Person.
   val randomPerson = for {
     t <- choose("Mr", "Mrs", "Dr")
-    x <- nextInt(5)
-    n <- nextPrintableString(x + 5)
+    x <- nextInt(5).map(_ + 5)
+    n <- nextPrintableString(x)
     a <- nextInt(100)
   } yield Person(t, n, a)
 
