@@ -2,12 +2,13 @@ package org.tpolecat.tiny.world.example
 
 import scala.util.Random
 import org.tpolecat.tiny.world._
+import org.tpolecat.tiny.world.FreeWorld
 
 /**
  * An example `World` with a small set of `Action`s for random number generation. Although interpreting `Action`s in
  * this `World` involves manipulation of an impure `State`, this impurity is not visible to users; the API is pure.
  */
-object RngWorldMinimal extends World {
+trait RngWorldMinimal { this: EffectWorld =>
 
   // Our world's state is an instance of `Random`, but clients have no way to know this, and have no way to get a 
   // reference to the `State` as it is passed through each `Action`.
@@ -23,26 +24,27 @@ object RngWorldMinimal extends World {
   // initial `State` and return value are specific to each `World`, this is left to the implementor. Here we provide a 
   // single way to run an `Action` based on a provided seed, which is a pure function.
   implicit class RunnableAction[A](a: Action[A]) {
-    def run(seed: Long): A = runWorld(a, new Random(seed))._2    
+    def exec(seed: Long): A = runWorld(a, new Random(seed))._2
   }
 
 }
 
 object RngWorldMinimalTest extends App {
 
-  // Import our `Action`s 
-  import RngWorldMinimal._
+  // Create an `EffectWorld` that runs on the stack, and import its `Action`s
+  object RngStackWorld extends RngWorldMinimal with FreeWorld
+  import RngStackWorld._
 
   // An `Action` that returns a pair of integers, a < 100, b < a
   val pair = for {
     a <- nextInt(100)
     b <- nextInt(a)
   } yield (a, b)
-  
+
   // Run that baby
-  println(pair.run(0L)) // pure! always returns (60, 28)
-  println(pair.run(0L)) // exactly the same of course
-  println(pair.run(123L)) // (82, 52)
+  println(pair.exec(0L)) // pure! always returns (60, 28)
+  println(pair.exec(0L)) // exactly the same of course
+  println(pair.exec(123L)) // (82, 52)
 
 }
 

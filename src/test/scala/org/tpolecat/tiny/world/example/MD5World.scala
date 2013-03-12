@@ -6,10 +6,9 @@ import scalaz.syntax.monad._
 import scalaz.syntax.traverse._
 import scalaz.std.list._
 
-object MD5World extends PrivateWorld {
+object MD5World extends World {
 
   type State = MessageDigest
-  def initialState = MessageDigest.getInstance("MD5")
 
   def digest = effect(_.digest()).map(_.toSeq)
   def digestUTF8(s: String) = digest(s.getBytes("UTF8"))
@@ -19,6 +18,10 @@ object MD5World extends PrivateWorld {
   def update(bs: Seq[Byte]) = effect(_.update(bs.toArray))
   def updateUTF8(s: String) = update(s.getBytes("UTF8"))
   def nop = unit()
+
+  implicit class RunnableAction[A](a: Action[A]) {
+    def run = runWorld(a, MessageDigest.getInstance("MD5"))
+  }
 
 }
 
@@ -34,9 +37,9 @@ object MD5WorldTest extends App {
     d <- digest
   } yield "%d bytes: %s".format(n, d.mkString(" "))
 
-  def quickMD5(s:String) = (updateUTF8(s) >> digest).run
-  
+  def quickMD5(s: String) = (updateUTF8(s) >> digest).run
+
   println(md5(List("foo", "bar", "baz")).run)
   println(quickMD5(List("foo", "bar", "baz").mkString))
-  
+
 }

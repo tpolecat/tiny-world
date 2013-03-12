@@ -4,16 +4,16 @@ import java.lang.ProcessBuilder
 import scala.collection.JavaConverters._
 import org.tpolecat.tiny.world._
 import java.io.File
+import scala.io.Source
+import scalaz.syntax.monad._
 
-object ProcessBuilderWorld extends ImpureFactoryWorld {
+trait ProcessBuilderWorld extends Props { this: EffectWorld =>
 
   type State = ProcessBuilder
-  protected def initialState = new ProcessBuilder
 
-  def command: Action[List[String]] = effect(_.command.asScala.toList)
-  def command(cmd: String*): Action[Unit] = effect(_.command(cmd: _*))
-
-  def directory: GetterSetter[File] = getterSetter(_.directory, _.directory(_))
+  val directory: Prop[File] = Prop(_.directory, _.directory(_))
+  val command: Prop[Seq[String]] = Prop(_.command.asScala.toSeq, _.command(_: _*))
+  val redirectErrorStream: Prop[Boolean] = Prop(_.redirectErrorStream, _.redirectErrorStream(_))
 
   object env {
     def +=(kv: (String, String)): Action[Unit] = effect(_.environment.put(kv._1, kv._2))
@@ -21,28 +21,29 @@ object ProcessBuilderWorld extends ImpureFactoryWorld {
     def apply(s: String): Action[Option[String]] = effect(_.environment.get(s)).map(Option(_))
   }
 
-  def redirectErrorStream: Action[Boolean] = effect(_.redirectErrorStream)
-  def redirectErrorStream(b: Boolean): Action[Unit] = effect(_.redirectErrorStream(b))
+  implicit class RunnableAction[A](a: Action[A]) {
+    def build: ProcessBuilder = runWorld(a, new ProcessBuilder)._1
+  }
 
 }
 
-object ProcessBuilderWorldTest extends App {
+object ProcessBuilderWorldTest extends App with ProcessBuilderWorld with World {
 
-  import ProcessBuilderWorld._
-
+  // Build a process builder to list files in the parent directory, with full details and GMT times
   val proc = for {
     d <- directory
-    _ <- directory := new File(d, "foo")
-    _ <- env += ("foo" -> "bar")
-    _ <- command("ls")
-    _ <- redirectErrorStream(true)
+    _ <- directory := new File(d, "..")
+    _ <- env += ("TZ" -> "GMT")
+    _ <- command := Seq("ls", "-lag")
+    _ <- redirectErrorStream := true
   } yield ()
 
-  // This operation is impure because it returns a new value each time
-  val pb: ProcessBuilder = proc.unsafeBuild
+  // This is a pure operation, although equality on ProcessBuilder is bogus
+  val pb: ProcessBuilder = proc.build
 
-  println(pb.directory.getAbsolutePath)
-  
+  // These are not the droids you're looking for
+  Source.fromInputStream(pb.start.getInputStream).getLines.foreach(println)
+
 }
 
 

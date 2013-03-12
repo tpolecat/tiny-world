@@ -9,11 +9,11 @@ import java.util.Locale
 import java.util.GregorianCalendar
 import scalaz.effect.IO
 
-object GregorianCalendarWorld extends World with ImpureState {
+object GregorianCalendarWorld extends World with Props {
   protected type State = GregorianCalendar
 
-  private def genField[A](field: Int, f: Int => A, g: A => Int): GetterSetter[A] =
-    getterSetter(s => f(s.get(field)), (s, a) => s.set(field, g(a)))
+  private def genField[A](field: Int, f: Int => A, g: A => Int): Prop[A] =
+    Prop(s => f(s.get(field)), (s, a) => s.set(field, g(a)))
 
   private def intField(f: Int) = genField[Int](f, identity, identity)
 

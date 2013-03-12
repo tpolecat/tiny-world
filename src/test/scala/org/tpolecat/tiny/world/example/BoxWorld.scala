@@ -2,7 +2,7 @@ package org.tpolecat.tiny.world.example
 
 import scalaz.syntax.monad._
 import scalaz.syntax.id._
-import org.tpolecat.tiny.world.PublicWorld
+import org.tpolecat.tiny.world.World
 
 // The simplest possible mutable object
 class Box(var n: Int) {
@@ -11,7 +11,7 @@ class Box(var n: Int) {
 }
 
 // A world for manipulating a Box
-object BoxWorld extends PublicWorld {
+object BoxWorld extends World {
 
   // Our state type
   type State = Box
@@ -19,7 +19,11 @@ object BoxWorld extends PublicWorld {
   // Primitive operations
   def get: Action[Int] = effect(b => b.n)
   def mod(f: Int => Int): Action[Int] = effect(b => b mod f) >> get
-  def nop:Action[Unit] = unit()
+  def nop: Action[Unit] = unit()
+
+  implicit class RunnableAction[A](a: Action[A]) {
+    def eval(b: Box) = runWorld(a, b)
+  }
 
 }
 
@@ -42,13 +46,12 @@ object BoxWorldTest extends App {
   println(bar(3).eval(new Box(2))) // (Box(15),(2,5,15))
 
   // Recursive action will never blow the stack
-  val countDown:Action[String] = for {
+  val countDown: Action[String] = for {
     a <- get
     _ <- if (a == 0) nop else mod(_ - 1) >> countDown
   } yield "done"
-  
-  println(countDown.eval(new Box(10000))) // (Box(0),done)
 
+  println(countDown.eval(new Box(10000))) // (Box(0),done)
 
 }
 

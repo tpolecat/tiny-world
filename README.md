@@ -66,6 +66,14 @@ Each `World` has its own path-dependent `Action` type that's unique to that worl
 * `effect(...)` take a function `State => A` and produce a `State[A]`. This kind of action does not replace the world state, so it's appropriate for mutable state, or for actions that rely on the state but don't replace it.
 * `unit(...)` takes a value `A` and produces a `State[A]`. Use this constructor for actions that do not rely on the world state at all. Note that `unit()` gives you a do-nothing `State[Unit]` which is useful for conditionals.
 
+Action Laws
+-----------
+
+* The monadic composition of deterministic `Action`s is also deterministic.
+* The execution of a deterministic action is pure.
+
+
+
 Kinds of Worlds
 ---------------
 

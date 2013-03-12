@@ -1,13 +1,13 @@
 package org.tpolecat.tiny.world.example
 
-import org.tpolecat.tiny.world.PublicWorld
+import org.tpolecat.tiny.world.World
 
 // Use case: some API gives us a Java map and we're supposed to query and 
 // mutate it. How can we do this in a pure way?
 
 // First we need to construct an effect world that understands how to manipulate 
 // Java maps. We want to pass in an existing map, so the world is public.
-trait JMapWorld[K, V] extends PublicWorld {
+trait JMapWorld[K, V] extends World {
 
   // The type of thing we're working with
   type State = java.util.Map[K, V]
@@ -15,13 +15,17 @@ trait JMapWorld[K, V] extends PublicWorld {
   // Primitive actions; typically constructed using effect(...)
   def get(k: K): Action[Option[V]] = effect(_.get(k)).map(Option(_))
   def put(k: K, v: V): Action[Option[V]] = effect(_.put(k, v)).map(Option(_))
-  def clear():Action[Unit] = effect(_.clear())
+  def clear(): Action[Unit] = effect(_.clear())
 
   // A derived action. Note the use of the unit(...) constructor.
-  def modify(k: K, f: V => V):Action[Unit] = for {
+  def modify(k: K, f: V => V): Action[Unit] = for {
     v <- get(k)
     _ <- v.map(f).map(put(k, _)).getOrElse(unit())
   } yield ()
+
+  implicit class RunnableAction[A](a: Action[A]) {
+    def run(s: State) = runWorld(a, s)._2
+  }
 
 }
 
@@ -56,7 +60,7 @@ object JMapWorldTest extends App {
   val result = action.run(m) // CAREFUL HERE
 
   // What have we done?
-  println("Result was: " + result)  // foo was Some(bar)
+  println("Result was: " + result) // foo was Some(bar)
   println("New map state is: " + m) // {bar=quxabc}
-  
+
 }

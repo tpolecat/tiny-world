@@ -1,10 +1,10 @@
 package org.tpolecat.tiny.world.example
 
-import org.tpolecat.tiny.world.PublicWorld
+import org.tpolecat.tiny.world.World
 import java.awt.geom.AffineTransform
 
 // An effect world that understands AWT affine transform objects
-object AffineTransferWorld extends PublicWorld {
+object AffineTransferWorld extends World {
 
   type State = AffineTransform
 
@@ -15,7 +15,11 @@ object AffineTransferWorld extends PublicWorld {
   def scale(sx: Double, sy: Double): Action[Unit] = effect(_.scale(sx, sy))
 
   // TODO: add transform method: Seq[(Double,Double)] => Seq[(Double,Double)]
-  
+
+  implicit class RunnableAction[A](a: Action[A]) {
+    def eval(s: State) = runWorld(a, s)
+  }
+
 }
 
 // Client code uses the world thus:
