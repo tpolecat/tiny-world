@@ -3,11 +3,10 @@ package org.tpolecat.tiny.world
 import scalaz.Monad
 
 /**
- * A simpler kind of world that doesn't use the free monad, which means it can blow the stack.
+ * A simpler kind of world that doesn't use the free monad, which means it can blow the stack. This is here for 
+ * illustrative purposes and shouldn't be used in anger (use `World` instead).
  */
 trait StackWorld extends EffectWorld {
-
-  protected type State
 
   final case class Action[A] private[StackWorld] (eval: State => (State, A)) {
 

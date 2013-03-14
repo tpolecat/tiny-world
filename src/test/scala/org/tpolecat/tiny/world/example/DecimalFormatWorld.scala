@@ -3,17 +3,21 @@ package org.tpolecat.tiny.world.example
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Currency
-
 import org.tpolecat.tiny.world.Props
 import org.tpolecat.tiny.world.World
+import java.util.Locale
 
+/** A world of `Action`s that produce formatting functions `String => Double`. */
 object DecimalFormatWorld extends World with Props {
 
   protected type State = DecimalFormat
 
   val currency: Prop[Currency] = Prop(_.getCurrency, _.setCurrency(_))
+
   val decimalSymbols: Prop[DecimalFormatSymbols] = Prop(_.getDecimalFormatSymbols, _.setDecimalFormatSymbols(_))
+  
   val groupingSize: Prop[Int] = Prop(_.getGroupingSize, _.setGroupingSize(_))
+  
   val multiplier: Prop[Int] = Prop(_.getMultiplier, _.setMultiplier(_))
 
   val maxDigits: Prop[(Int, Int)] = Prop(
@@ -43,11 +47,11 @@ object DecimalFormatWorldTest extends App {
   import DecimalFormatWorld._
 
   val fact = for {
-    _ <- minDigits := (3, 4)
+    _ <- pattern  := "#,###.##"
   } yield ()
 
-  val f = fact.unsafeBuild // TODO: must accept locale here
+  val f = fact.unsafeBuild // TODO: must accept locale here; until then it's unsafe
 
-  println(f(0.12))
-
+  println(f(1863876.12))
+  
 }

@@ -45,7 +45,7 @@ object RngWorldMinimalTest extends App {
   println(pair.exec(0L)) // pure! always returns (60, 28)
   println(pair.exec(0L)) // exactly the same of course
   println(pair.exec(123L)) // (82, 52)
-
+  
 }
 
 

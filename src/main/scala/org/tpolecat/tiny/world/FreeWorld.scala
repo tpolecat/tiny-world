@@ -7,7 +7,7 @@ import scalaz.Free._
 
 /**
  * An `EffectWorld` implemented directly via the `Free` monad. This is functionally equivalent to the `Trampoline`
- * world but is somewhat lower level and might be useful for future exploration.
+ * world but is somewhat lower level and might be useful for future exploration. 
  */
 trait FreeWorld extends EffectWorld {
 

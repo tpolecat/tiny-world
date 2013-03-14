@@ -66,30 +66,16 @@ Each `World` has its own path-dependent `Action` type that's unique to that worl
 * `effect(...)` take a function `State => A` and produce a `State[A]`. This kind of action does not replace the world state, so it's appropriate for mutable state, or for actions that rely on the state but don't replace it.
 * `unit(...)` takes a value `A` and produces a `State[A]`. Use this constructor for actions that do not rely on the world state at all. Note that `unit()` gives you a do-nothing `State[Unit]` which is useful for conditionals.
 
-Action Laws
------------
+Examples
+--------
 
-* The monadic composition of deterministic `Action`s is also deterministic.
-* The execution of a deterministic action is pure.
-
-
-
-Kinds of Worlds
----------------
-
-Right now there are two kinds of `World`, although more are likely to emerge. They differ only in the `run` method(s) provided on their actions.
-
-* `PublicWorld` actions consume an initial state, and return the yielded result (`run`) or the final state *and* the yielded result (`eval`). This kind of world is appropriate if you have an existing mutable structure you would like to manipulate in a pure way.
-* `PrivateWorld` constructs its own initial state and returns only the final result; `run` takes no arguments and there is no `eval`. Even the type of the state is private to the implementation. This kind of world is useful for completely isolating the interation with a mutable structure and returning only the final result. An example is provided that hides a `java.util.Calendar` in this way, and the end result is an *entirely pure* calendar API because the initial state is always identical and the actions perform no IO. 
-
-Some other kinds of worlds under consideration:
-
-* Explicit `Pure` and `Impure` variants with `run` and `unsafeRun` action methods, respectively. This is just for documentation, but that's probably a good enough reason.
-* A `FactoryWorld` would have a fixed initial state, and the `run` method would return the final state (the `eval` method, as with `PublicWorld`, would return both the final state and the yielded result). This would be useful for a `ProcessBuilderWorld` for example.
+There are a bunch of examples in `src/test` that apply this technique to some common irritating APIs (including `java.util.Calendar`, which seems like it could evolve into something genuinely useful). 
 
 For more info...
 ----------------
 
-More here soon. For now see the examples in `src/test`.
+Comments and suggestions are welcome. 
 
-You can also find me on #scala and on the Tweeter.
+You can also me on `#scala` and on the Tweeter.
+
+

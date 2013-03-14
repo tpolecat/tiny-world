@@ -9,7 +9,11 @@ import java.util.Locale
 import java.util.GregorianCalendar
 import scalaz.effect.IO
 
+/**
+ * An `EffectWorld` that provides a pure AIP for date calculations. The implementation is incomplete.
+ */
 object GregorianCalendarWorld extends World with Props {
+
   protected type State = GregorianCalendar
 
   private def genField[A](field: Int, f: Int => A, g: A => Int): Prop[A] =
@@ -27,7 +31,7 @@ object GregorianCalendarWorld extends World with Props {
   def dayOfYear = intField(DAY_OF_YEAR)
   def month = genField[Month](MONTH, Month.forOrdinal(_).get, _.ord)
   def year = intField(YEAR)
-  
+
   object Env {
     def timeZone: IO[TimeZone] = IO(TimeZone.getDefault)
     def locale: IO[Locale] = IO(Locale.getDefault)
@@ -36,12 +40,19 @@ object GregorianCalendarWorld extends World with Props {
 
   implicit class RunnableAction[A](a: Action[A]) {
 
+    /**
+     * Run this `Action` in the given `TimeZone` and `Locale`, starting at the given time. This is a pure function.
+     */
     def run(tz: TimeZone, loc: Locale, time: Long): A = {
       val c = new GregorianCalendar(tz, loc)
       c.setTimeInMillis(time)
       runWorld(a, c)._2
     }
 
+    /**
+     * Run this `Action` with the current `TimeZone`, `Locale`, and time. This is a pure function that constructs an
+     * `IO` action that can be executed (impurely) via `unsafePerformIO`.
+     */
     def run: IO[A] =
       (Env.timeZone |@| Env.locale |@| Env.timeMillis)(run)
 
@@ -60,9 +71,10 @@ object CalTest extends App {
     c <- dayOfYear
   } yield c - d
 
-  val now = ((year : Action[Int]) |@| month |@| dayOfMonth).tupled
-  
   println(daysUntilChristmas.run.unsafePerformIO)
+
+  val now = ((year: Action[Int]) |@| month |@| dayOfMonth).tupled
+
   println(now.run.unsafePerformIO)
 
 }

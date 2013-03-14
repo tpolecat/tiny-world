@@ -5,9 +5,11 @@ import scalaz.Free._
 import scalaz.std.function._
 import scalaz.std.tuple._
 
+/**
+ * An `EffectWorld` implemented on top of `Free[Function0, A]`, otherwise known as `Trampoline[A]`. The implementation
+ * is suspiciously similar to `scalaz.effect.IO`. This is probably the implementation you want to use.
+ */
 trait World extends EffectWorld {
-
-  protected type State
 
   class Action[+A] protected[World] (private[World] val t: State => Trampoline[(State, A)]) {
 

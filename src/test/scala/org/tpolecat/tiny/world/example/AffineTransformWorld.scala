@@ -4,7 +4,7 @@ import org.tpolecat.tiny.world.World
 import java.awt.geom.AffineTransform
 
 // An effect world that understands AWT affine transform objects
-object AffineTransferWorld extends World {
+object AffineTransformWorld extends World {
 
   type State = AffineTransform
 
@@ -26,7 +26,7 @@ object AffineTransferWorld extends World {
 object AffineTransferWorldTest extends App {
 
   // The world is just a module that exposes actions for our use
-  import AffineTransferWorld._
+  import AffineTransformWorld._
 
   // A pure action that produces a String. The action might manipulate an
   // underlying AffineTransform when it is "run" at a later time. The action
@@ -47,7 +47,7 @@ object AffineTransferWorldTest extends App {
 
   // What have we done?
   println(result) // "Determinant was -2, then -1"
-  println(state) // AffineTransform[[0.0, -1.0, 0.0], [-0.5, -0.0, 0.0]]
+  println(state)  // AffineTransform[[0.0, -1.0, 0.0], [-0.5, -0.0, 0.0]]
 
 }
 
