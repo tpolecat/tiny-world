@@ -76,6 +76,6 @@ For more info...
 
 Comments and suggestions are welcome. 
 
-You can also me on `#scala` and on the Tweeter.
+You can find me on `#scala` and on the Tweeter.
 
 
