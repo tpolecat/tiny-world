@@ -11,9 +11,6 @@ trait EffectWorld {
   /** An action in this `World`, returning a result of type `A`. */
   type Action[A]
   
-  /** Our action type must have a monad. */
-  implicit def ActionMonad:Monad[Action]
-  
   /** Run an `Action` with some initial `State`, returning the final state and result. */
   protected def runWorld[A](a: Action[A], w: State): (State, A)
 

@@ -5,6 +5,11 @@ Monadic effect worlds for interacting safely with mutable data.
 
 This is trivial but useful. It does not seem to be a bad idea, but I'm willing to listen to arguments to that effect.
 
+What's new?
+------------
+
+I just added `ActionT` and a `MonadIO` instance for it, so you can now stack like a boss. There's a new example called `IOWorld` that demonstrates this. It's not quite baked but it does seem to work. More soon.
+
 What is this?
 -------------
 

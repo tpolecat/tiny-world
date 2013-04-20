@@ -7,7 +7,7 @@ import java.io.File
 import scala.io.Source
 import scalaz.syntax.monad._
 
-trait ProcessBuilderWorld extends Props { this: EffectWorld =>
+trait ProcessBuilderWorld extends Props with World {
 
   type State = ProcessBuilder
 
@@ -27,7 +27,7 @@ trait ProcessBuilderWorld extends Props { this: EffectWorld =>
 
 }
 
-object ProcessBuilderWorldTest extends App with ProcessBuilderWorld with World {
+object ProcessBuilderWorldTest extends App with ProcessBuilderWorld {
 
   // Build a process builder to list files in the parent directory, with full details and GMT times
   val proc = for {
