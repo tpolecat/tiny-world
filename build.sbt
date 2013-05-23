@@ -10,8 +10,8 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalaz" % "scalaz-core_2.10" % "7.0.0-M7",
-  "org.scalaz" % "scalaz-effect_2.10" % "7.0.0-M7"
+  "org.scalaz" % "scalaz-core_2.10" % "7.0.0",
+  "org.scalaz" % "scalaz-effect_2.10" % "7.0.0"
 )
 
 

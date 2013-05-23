@@ -28,7 +28,15 @@ trait World extends EffectWorld {
 
   }
 
-  object Action extends ActionInstances
+  object Action {
+
+    implicit object ActionMonad extends Monad[Action] {
+      def point[A](a: => A): Action[A] = action(w => (w, a))
+      override def map[A, B](fa: Action[A])(f: (A) => B) = fa map f
+      def bind[A, B](fa: Action[A])(f: (A) => Action[B]): Action[B] = fa flatMap f
+    }
+
+  }
 
   // Implementation of EffectWorld
   protected def runWorld[A](a: Action[A], w: State): (State, A) = a.t(w).run
@@ -39,29 +47,14 @@ trait World extends EffectWorld {
   class ActionT[M[+_], +A](private[World] val run: State => M[(State, A)]) { self =>
 
     def map[C](f: A => C)(implicit M: Functor[M]): ActionT[M, C] =
-      new ActionT(a => M.map(run(a)) { case (s, a) => (s, f(a)) })
+      new ActionT(s => M.map(run(s)) { case (s0, a) => (s0, f(a)) })
 
     def flatMap[C](f: A => ActionT[M, C])(implicit M: Bind[M]): ActionT[M, C] =
-      new ActionT(r => M.bind(run(r)) { case (s, a) => f(a).run(s) })
+      new ActionT(s => M.bind(run(s)) { case (s0, a) => f(a).run(s0) })
 
   }
 
-  object ActionT extends ActionTInstances
-  protected def runWorld[M[+_], A](a: ActionT[M, A], w: State): M[(State, A)] = a.run(w)
-
-  trait ActionInstances {
-
-    implicit object ActionMonad extends Monad[Action] {
-      def point[A](a: => A): Action[A] = action(w => (w, a))
-      override def map[A, B](fa: Action[A])(f: (A) => B) = fa map f
-      def bind[A, B](fa: Action[A])(f: (A) => Action[B]): Action[B] = fa flatMap f
-    }
-
-  }
-
-  type IOAction[+A] = ActionT[IO, A]
-
-  trait ActionTInstances {
+  object ActionT {
 
     implicit def MonadActionT[M[+_]](implicit M: Monad[M]) = new Monad[({ type l[a] = ActionT[M, a] })#l] {
       def point[A](a: => A): ActionT[M, A] = new ActionT(s => M.point((s, a)))
@@ -69,10 +62,10 @@ trait World extends EffectWorld {
       def bind[A, B](fa: ActionT[M, A])(f: (A) => ActionT[M, B]): ActionT[M, B] = fa flatMap f
     }
 
-    implicit object OpMonadIO extends MonadIO[IOAction] {
-      def point[A](a: => A): IOAction[A] = MonadActionT[IO].point(a)
-      def bind[A, B](fa: IOAction[A])(f: A => IOAction[B]): IOAction[B] = fa.flatMap(f)
-      def liftIO[A](ioa: IO[A]): IOAction[A] = new ActionT(s => ioa.map((s, _)))
+    implicit object MonadIOActionT extends MonadIO[({ type λ[+α] = ActionT[IO, α] })#λ] {
+      def point[A](a: => A): ActionT[IO, A] = MonadActionT[IO].point(a)
+      def bind[A, B](fa: ActionT[IO, A])(f: A => ActionT[IO, B]): ActionT[IO, B] = fa.flatMap(f)
+      def liftIO[A](ioa: IO[A]): ActionT[IO, A] = new ActionT(s => ioa.map((s, _)))
     }
 
   }

@@ -1,47 +1,74 @@
 package org.tpolecat.tiny.world.example
 
 import language.higherKinds
-import org.tpolecat.tiny.world.World
-import scalaz.effect.IO
+import org.tpolecat.tiny.world.TWorld
+import scalaz._
+import Scalaz._
+import scalaz.effect._
 import scalaz.effect.IO._
+import util.Random.nextInt
 
-object IOWorld extends World {
+object IntWorld extends TWorld {
 
-  type State = Int
+  protected type State = Int
 
-  def mod(f: Int => Int): Action[Unit] = action(s => (f(s), ()))
-  def get: Action[Int] = action(s => (s, s))
+  /** A module of actions lifted into the specified Applicative (usually a Monad). */
+  class Actions[F[+_]: Applicative] extends Lifted[F] {
 
-  def getRandom(n: Int): IOAction[Int] = IO(util.Random.nextInt(n)).liftIO[IOAction]
+    def mod(f: Int => Int): Action[Unit] = action(s => (f(s), ()))
+    def get: Action[Int] = action(s => (s, s))
 
-  implicit class RunnableActionT[M[+_], A](at: ActionT[M, A]) {
-    def run(n: Int) = runWorld(at, n)
+    def getRandom(n: Int)(implicit ev: MonadIO[Action]): Action[Int] =
+      IO(nextInt(n)).liftIO[Action]
+
+    implicit class Ops[A](a: Action[A]) {
+      def run(n: Int) = eval(a, n)
+    }
+
   }
+
+  /** Constructs a set of pre-lifted actions. */
+  def lift[F[+_]: Applicative] = new Actions[F]
 
 }
 
 object IOWorldTest extends App {
 
-  import IOWorld._
+  val actions = IntWorld.lift[IO]
+  import actions._
 
-  val a: IOAction[String] = for {
-    n <- get.lift
-    _ <- putStrLn("state is now " + n).liftIO[IOAction]
-    r <- getRandom(10)
-    _ <- putStrLn("multiplying by random " + r).liftIO[IOAction]
-    _ <- mod(_ * r).lift
-    m <- get.lift
+  val a: Action[String] = for {
+    n <- get
+    _ <- putStrLn("state is now " + n).liftIO[Action]
+    r <- getRandom(10).map(_ + 2)
+    _ <- putStrLn("multiplying by random " + r).liftIO[Action]
+    _ <- mod(_ * r)
+    m <- get
   } yield "state changed to " + m
 
   val b = for {
     s1 <- a
     s2 <- a
-  } yield (s1, s2)
+    s3 <- a
+  } yield (s1, s2, s3)
 
   val io = b.run(1)
   println("action was 'run' with no side effects.")
 
+  println(io)
   println(io.unsafePerformIO)
-  println(io.unsafePerformIO)
+
+}
+
+object X {
+
+  trait CodeTree
+  case class Leaf(id: String) extends CodeTree
+  case class Fork(id: String) extends CodeTree
+
+  def testListSwitch(l: CodeTree): Unit = l match {
+    case Leaf(id) => println(String.format("Leaf id=%s", id))
+    case Fork(id) => println(String.format("Fork id=%s", id))
+  }
 
 }
