@@ -10,6 +10,8 @@ What's new?
 
 I just added `ActionT` and a `MonadIO` instance for it, so you can now stack like a boss. There's a new example called `IOWorld` that demonstrates this. It's not quite baked but it does seem to work. More soon.
 
+I also added an STM example that hides the transactional machinery. Users don't even know they're constructing transactions!
+
 What is this?
 -------------
 
