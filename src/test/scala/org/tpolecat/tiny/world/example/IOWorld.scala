@@ -60,15 +60,3 @@ object IOWorldTest extends App {
 
 }
 
-object X {
-
-  trait CodeTree
-  case class Leaf(id: String) extends CodeTree
-  case class Fork(id: String) extends CodeTree
-
-  def testListSwitch(l: CodeTree): Unit = l match {
-    case Leaf(id) => println(String.format("Leaf id=%s", id))
-    case Fork(id) => println(String.format("Fork id=%s", id))
-  }
-
-}
