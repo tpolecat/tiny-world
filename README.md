@@ -1,14 +1,14 @@
 tiny-world
 ==========
 
-Monadic effect worlds for interacting safely with mutable data.
+Monadic effect worlds for great good! This is a bit like `State` and `StateT` with existential state that's private by default. This allows for constructing effect worlds that can't leak state or any knowledge thereof (including the type). This is equivalent to (and simpler than) many applications of `Free`.
 
-This is trivial but useful. It does not seem to be a bad idea, but I'm willing to listen to arguments to that effect.
+`World` is implemented on top of `Free` (via `Trampoline`) but `WorldT` is not (yet). So keep that in mind in the unlikely event that you play around with this stuff for real.
 
 What's new?
 ------------
 
-I just added `ActionT` and a `MonadIO` instance for it, so you can now stack like a boss. There's a new example called `IOWorld` that demonstrates this. It's not quite baked but it does seem to work. More soon.
+I just added `ActionT` and a `MonadIO` instance for it, so you can now stack like a boss. There's a new example called `IOWorld` that demonstrates this. It's not quite baked but it does seem to work. *UPDATE* just added an example turning a simple Slick program into pure functional awesomeness.
 
 I also added an STM example that hides the transactional machinery. Users don't even know they're constructing transactions!
 
