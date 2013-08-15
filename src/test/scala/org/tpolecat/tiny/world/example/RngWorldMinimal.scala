@@ -1,14 +1,13 @@
 package org.tpolecat.tiny.world.example
 
 import scala.util.Random
-import org.tpolecat.tiny.world._
 import org.tpolecat.tiny.world.FreeWorld
 
 /**
  * An example `World` with a small set of `Action`s for random number generation. Although interpreting `Action`s in
  * this `World` involves manipulation of an impure `State`, this impurity is not visible to users; the API is pure.
  */
-trait RngWorldMinimal { this: EffectWorld =>
+object RngWorldMinimal extends FreeWorld {
 
   // Our world's state is an instance of `Random`, but clients have no way to know this, and have no way to get a 
   // reference to the `State` as it is passed through each `Action`.
@@ -20,6 +19,9 @@ trait RngWorldMinimal { this: EffectWorld =>
   def nextInt = effect(_.nextInt)
   def nextInt(n: Int) = effect(_.nextInt(n))
 
+  // Expose our unit constructor
+  def unit[A](a:A) = super.unit(a)
+  
   // In order to make our `Action`s runnable, we must provide a public way to invoke `runWorld`. Because the choice of
   // initial `State` and return value are specific to each `World`, this is left to the implementor. Here we provide a 
   // single way to run an `Action` based on a provided seed, which is a pure function.
@@ -31,9 +33,8 @@ trait RngWorldMinimal { this: EffectWorld =>
 
 object RngWorldMinimalTest extends App {
 
-  // Create an `EffectWorld` that runs on the stack, and import its `Action`s
-  object RngStackWorld extends RngWorldMinimal with FreeWorld
-  import RngStackWorld._
+  // Import our world's actions
+  import RngWorldMinimal._
 
   // An `Action` that returns a pair of integers, a < 100, b < a
   val pair = for {
@@ -45,7 +46,14 @@ object RngWorldMinimalTest extends App {
   println(pair.exec(0L)) // pure! always returns (60, 28)
   println(pair.exec(0L)) // exactly the same of course
   println(pair.exec(123L)) // (82, 52)
-  
+
+  // Show that our world is trampolined.
+  def genMany[A](n: Int, a: Action[A], acc: List[A] = Nil): Action[List[A]] =
+    a.flatMap(x => if (n == 0) unit(x :: acc) else genMany(n - 1, a, x :: acc))
+
+  // Many iterations via flatMap
+  println(genMany(1000000, nextInt).map(_.sum).exec(0L)) // -340966447
+
 }
 
 
