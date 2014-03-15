@@ -18,10 +18,12 @@ trait EffectWorld {
   protected def action[A](f: State => (State, A)): Action[A]
 
   /** Construct an `Action` for a computation consumes the `State` and produces a result of type `A`. */
-  protected final def effect[A](f: State => A): Action[A] = action(s => (s, f(s)))
+  protected final def effect[A](f: State => A): Action[A] = 
+    action(s => (s, f(s)))
 
   /** Construct an `Action` for a computation that simply returns a value of type `A`. */
-  protected final def unit[A](a: => A): Action[A] = action(s => (s, a))
+  protected final def unit[A](a: => A): Action[A] = 
+    action(s => (s, a))
 
 }
 
