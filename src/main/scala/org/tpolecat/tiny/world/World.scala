@@ -14,7 +14,7 @@ trait World extends EffectWorld {
     def map[B](f: A => B): Action[B] =
       new Action(w => for { p <- t(w) } yield (p._1, f(p._2)))
     def flatMap[B](f: A => Action[B]): Action[B] =
-      new Action(w => for { p <- t(w); x <- f(p._2).t(w) } yield x)
+      new Action(w => for { p <- t(w); x <- f(p._2).t(p._1) } yield x)
   }
 
   object Action {
